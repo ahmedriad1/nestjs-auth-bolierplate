@@ -2,9 +2,11 @@ import {
   BaseEntity,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
+import { RefreshToken } from '../auth/refresh-token.entity';
 import * as bcrypt from 'bcryptjs';
 
 @Entity()
@@ -21,6 +23,9 @@ export class User extends BaseEntity {
 
   @Column()
   password: string;
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 
   async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);

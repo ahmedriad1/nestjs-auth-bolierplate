@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { UserRepository } from '../user/user.repository';
 import { getJwtOptions } from '../config/jwtOptions';
+import { RefreshTokenRepository } from './refresh-token.repository';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { getJwtOptions } from '../config/jwtOptions';
       useFactory: getJwtOptions,
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([UserRepository]),
+    TypeOrmModule.forFeature([UserRepository, RefreshTokenRepository]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtModule, JwtStrategy],
