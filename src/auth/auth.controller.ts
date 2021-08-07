@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthenticatedResponse } from './interface/authenticated-response.interface';
 import { AuthService } from './auth.service';
@@ -7,6 +15,7 @@ import { User } from '../user/user.entity';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -40,6 +49,12 @@ export class AuthController {
   @UseGuards(AuthGuard())
   me(@GetUser() user: User) {
     return user;
+  }
+
+  @Patch('/update')
+  @UseGuards(AuthGuard())
+  update(@GetUser() user: User, @Body() body: UpdateMeDto) {
+    return this.authService.updateMe(user.id, body);
   }
 
   @Delete('/logout')

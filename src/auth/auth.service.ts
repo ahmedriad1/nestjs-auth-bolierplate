@@ -1,7 +1,13 @@
+import { UserService } from './../user/user.service';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from './../user/dto/create-user.dto';
 import { AuthenticatedResponse } from './interface/authenticated-response.interface';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from '../user/user.repository';
@@ -10,6 +16,8 @@ import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { User } from 'src/user/user.entity';
 import { RefreshTokenRepository } from './refresh-token.repository';
 import { RefreshToken } from './refresh-token.entity';
+import { UpdateMeDto } from './dto/update-me.dto';
+import { BadRequestException } from '@nestjs/common';
 
 export interface RefreshTokenPayload {
   jti: number;
@@ -27,6 +35,7 @@ export class AuthService {
     private readonly refreshTokenRepository: RefreshTokenRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly userService: UserService,
   ) {}
 
   async register(body: CreateUserDto): Promise<AuthenticatedResponse> {
@@ -42,6 +51,26 @@ export class AuthService {
     const token = await this.generateAccessToken(user);
     const refresh_token = await this.generateRefreshToken(user);
     return { user, token, refresh_token };
+  }
+
+  async updateMe(id: number, body: UpdateMeDto) {
+    const user = await this.userRepository.findOne(id);
+    if (!user) throw new NotFoundException('User not found !');
+
+    if (body.password) {
+      // If user wants to change password, check if he also wrote the old password
+      if (!body.old_password)
+        throw new BadRequestException('old_password is required');
+
+      // check if the old password is correct
+      if (!(await user.validatePassword(body.old_password)))
+        throw new BadRequestException('old_password is incorrect');
+
+      // if it's correct, hash the new password
+      body.password = await this.userRepository.hashPassword(body.password);
+    }
+
+    return this.userService.update(user.id, body);
   }
 
   private async generateAccessToken(user: User): Promise<string> {

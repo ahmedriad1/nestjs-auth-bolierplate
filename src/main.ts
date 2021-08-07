@@ -7,6 +7,7 @@ async function bootstrap() {
   const logger = new Logger('main');
 
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // will remove unvalidated fields
