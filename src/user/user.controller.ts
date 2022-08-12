@@ -1,7 +1,6 @@
 import {
   Controller,
   Param,
-  ParseIntPipe,
   Patch,
   Body,
   Delete,
@@ -11,10 +10,10 @@ import {
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User } from './user.entity';
 import { IPaginatedResult } from '../shared/interface/pagination-result.interface';
 import { PaginationDto } from '../shared/dto/pagination.dto';
 import { UserService } from './user.service';
+import { User } from '@prisma/client';
 
 @Controller('users')
 export class UserController {
@@ -28,7 +27,7 @@ export class UserController {
   }
 
   @Get('/:id')
-  show(@Param('id', ParseIntPipe) id: number): Promise<User> {
+  show(@Param('id') id: string): Promise<User> {
     return this.usersService.show(id);
   }
 
@@ -38,15 +37,12 @@ export class UserController {
   }
 
   @Patch('/:id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: UpdateUserDto,
-  ): Promise<User> {
+  update(@Param('id') id: string, @Body() body: UpdateUserDto): Promise<User> {
     return this.usersService.update(id, body);
   }
 
   @Delete('/:id')
-  destory(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  destory(@Param('id') id: string): Promise<void> {
     return this.usersService.destory(id);
   }
 }

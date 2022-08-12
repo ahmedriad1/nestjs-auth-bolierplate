@@ -1,17 +1,15 @@
+import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
-import { UserRepository } from './../user/user.repository';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { JwtPayload } from './interface/jwt-payload.interface';
-import { User } from '../user/user.entity';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @InjectRepository(UserRepository)
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
     private readonly configService: ConfigService,
   ) {
     super({
@@ -22,9 +20,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload): Promise<User> {
     const { id } = payload;
-    const user = await this.userRepository.findOne(id);
-    if (!user) throw new UnauthorizedException();
-    delete user.password;
-    return user;
+    try {
+      const user = await this.userService.show(id);
+      return user;
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 }

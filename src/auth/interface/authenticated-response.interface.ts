@@ -1,4 +1,4 @@
-import { User } from '../../user/user.entity';
+import { User } from '@prisma/client';
 
 export interface AuthenticatedResponse {
   user: User;

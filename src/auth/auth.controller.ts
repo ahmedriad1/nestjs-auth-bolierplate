@@ -11,11 +11,11 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthenticatedResponse } from './interface/authenticated-response.interface';
 import { AuthService } from './auth.service';
 import { GetUser } from './get-user.decorator';
-import { User } from '../user/user.entity';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
+import { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
