@@ -9,8 +9,8 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PaginationDto } from '../shared/dto/pagination.dto';
-import { IPaginatedResult } from '../shared/interface/pagination-result.interface';
+// import { PaginationDto } from '../shared/dto/pagination.dto';
+// import { IPaginatedResult } from '../shared/interface/pagination-result.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -39,22 +39,22 @@ export class UserService {
     return bcrypt.compare(password, userPassword);
   }
 
-  async index(paginationDto: PaginationDto): Promise<IPaginatedResult<User>> {
-    const [count, users] = await this.prisma.$transaction([
-      this.prisma.user.count(),
-      this.prisma.user.findMany({
-        skip: paginationDto.limit * (paginationDto.page - 1 || 0),
-        take: paginationDto.limit,
-      }),
-    ]);
+  // async index(paginationDto: PaginationDto): Promise<IPaginatedResult<User>> {
+  //   const [count, users] = await this.prisma.$transaction([
+  //     this.prisma.user.count(),
+  //     this.prisma.user.findMany({
+  //       skip: paginationDto.limit * (paginationDto.page - 1 || 0),
+  //       take: paginationDto.limit,
+  //     }),
+  //   ]);
 
-    return {
-      data: this.excludePassword(users),
-      totalCount: count,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-    };
-  }
+  //   return {
+  //     data: this.excludePassword(users),
+  //     totalCount: count,
+  //     page: paginationDto.page,
+  //     limit: paginationDto.limit,
+  //   };
+  // }
 
   async show(id: string, withPassword = false): Promise<User> {
     const user = await this.prisma.user.findUnique({
@@ -95,16 +95,7 @@ export class UserService {
     }
   }
 
-  async update(id: string, body: UpdateUserDto): Promise<User> {
-    if (body.password) body.password = await this.hashPassword(body.password);
-
-    const user = await this.prisma.user.update({ where: { id }, data: body });
-    if (!user) throw new NotFoundException('User not found !');
-
-    return this.excludePassword(user);
-  }
-
-  async validateOldPasswordAndUpdate(
+  async update(
     id: string,
     body: UpdateUserDto & { old_password?: string },
   ): Promise<User> {
@@ -123,11 +114,19 @@ export class UserService {
       body.password = await this.hashPassword(body.password);
     }
 
-    return this.update(user.id, body);
+    if (body.password) body.password = await this.hashPassword(body.password);
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: body,
+    });
+    if (!updatedUser) throw new NotFoundException('User not found !');
+
+    return this.excludePassword(updatedUser);
   }
 
-  async destory(id: string): Promise<void> {
-    const user = await this.prisma.user.delete({ where: { id } });
-    if (!user) throw new NotFoundException('User not found !');
-  }
+  // async destory(id: string): Promise<void> {
+  //   const user = await this.prisma.user.delete({ where: { id } });
+  //   if (!user) throw new NotFoundException('User not found !');
+  // }
 }
