@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
 import { AuthenticatedResponse } from './interface/authenticated-response.interface';
 import { AuthService } from './auth.service';
 import { GetUser } from './get-user.decorator';
@@ -16,10 +7,15 @@ import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { User } from '@prisma/client';
+import { UseJwtAuthGuard } from './jwt.guard';
+import { TokenService } from './token.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly tokenService: TokenService,
+  ) {}
 
   @Post('/register')
   register(@Body() body: CreateUserDto): Promise<AuthenticatedResponse> {
@@ -34,7 +30,7 @@ export class AuthController {
   @Post('/refresh')
   async refresh(@Body() body: RefreshTokenDto): Promise<AuthenticatedResponse> {
     const { user, token } =
-      await this.authService.createAccessTokenFromRefreshToken(
+      await this.tokenService.createAccessTokenFromRefreshToken(
         body.refresh_token,
       );
 
@@ -46,20 +42,20 @@ export class AuthController {
   }
 
   @Get('/me')
-  @UseGuards(AuthGuard())
+  @UseJwtAuthGuard()
   me(@GetUser() user: User) {
     return user;
   }
 
   @Patch('/update')
-  @UseGuards(AuthGuard())
+  @UseJwtAuthGuard()
   update(@GetUser() user: User, @Body() body: UpdateMeDto) {
     return this.authService.updateMe(user.id, body);
   }
 
   @Delete('/logout')
   async logout(@Body() body: RefreshTokenDto): Promise<void> {
-    await this.authService.revokeRefreshToken(body.refresh_token);
+    await this.tokenService.revokeRefreshToken(body.refresh_token);
 
     return;
   }
