@@ -32,6 +32,6 @@ export class AuthService {
   }
 
   async updateMe(id: string, body: UpdateMeDto) {
-    return this.userService.validateOldPasswordAndUpdate(id, body);
+    return this.userService.update(id, body);
   }
 }
