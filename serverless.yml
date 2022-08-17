@@ -1,0 +1,46 @@
+org: ahmedriad1
+console: true
+service: nestjs-auth-boilerplate
+useDotenv: true
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-common-excludes
+  - serverless-plugin-include-dependencies
+
+package:
+  excludeDevDependencies: false
+  patterns:
+    - '!node_modules/.prisma/client/libquery_engine-*'
+    - 'node_modules/.prisma/client/libquery_engine-rhel-*'
+    - '!node_modules/prisma/libquery_engine-*'
+    - '!node_modules/@prisma/engines/**'
+    - '!src/**'
+    - '!test/**'
+    - '!prisma/**'
+    - 'node_modules/.prisma/client/**'
+    - '!dist/prisma/**'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: eu-central-1
+  environment:
+    DB_USER: ${env:DB_USER}
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DATABASE_URL: ${env:DATABASE_URL}
+    JWT_SECRET: ${env:JWT_SECRET}
+    JWT_TTL: ${env:JWT_TTL}
+    JWT_REFRESH_TTL: ${env:JWT_REFRESH_TTL}
+    JWT_REFRESH_SECRET: ${env:JWT_REFRESH_SECRET}
+
+functions:
+  main:
+    handler: dist/src/serverless.handler
+    events:
+      - http:
+          method: ANY
+          path: /
+      - http:
+          method: ANY
+          path: '{proxy+}'
