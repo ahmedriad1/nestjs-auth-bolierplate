@@ -1,28 +1,25 @@
 import { ConfigService } from '@nestjs/config';
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
 import { JwtConfigService } from '../config/jwt-config.service';
-import { UserModule } from '../user/user.module';
-import { RefreshTokenService } from './refresh-token.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { TokenService } from './token.service';
+import { MagicService } from './magic.service';
+import { EmailModule } from 'src/email/email.module';
+import { SessionService } from './session.service';
+import { EncryptionService } from './encryption.service';
 
 @Module({
   imports: [
     PrismaModule,
-    PassportModule,
+    EmailModule,
     JwtModule.registerAsync({
       useClass: JwtConfigService,
       inject: [ConfigService],
     }),
-    forwardRef(() => UserModule),
   ],
   controllers: [AuthController],
-  providers: [RefreshTokenService, TokenService, AuthService, JwtStrategy],
-  exports: [RefreshTokenService],
+  providers: [AuthService, MagicService, SessionService, EncryptionService],
 })
 export class AuthModule {}

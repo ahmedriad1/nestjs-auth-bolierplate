@@ -1,8 +1,8 @@
 import {
   IsString,
-  IsEmail,
+  // IsEmail,
   MaxLength,
-  MinLength,
+  // MinLength,
   IsOptional,
 } from 'class-validator';
 
@@ -12,19 +12,7 @@ export class UpdateMeDto {
   @MaxLength(100)
   name: string;
 
-  @IsOptional()
-  @IsEmail()
-  email: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(8)
-  @MaxLength(20)
-  password: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(8)
-  @MaxLength(20)
-  old_password: string;
+  // @IsOptional()
+  // @IsEmail()
+  // email: string;
 }

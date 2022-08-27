@@ -1,61 +1,61 @@
-import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
-import { AuthenticatedResponse } from './interface/authenticated-response.interface';
-import { AuthService } from './auth.service';
-import { GetUser } from './get-user.decorator';
-import { CreateUserDto } from '../user/dto/create-user.dto';
-import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { UpdateMeDto } from './dto/update-me.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Session,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
-import { UseJwtAuthGuard } from './jwt.guard';
-import { TokenService } from './token.service';
+import { AuthService } from './auth.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { SendMagicLinkDto } from './dto/send-magic-link.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
+import { GetUser } from './get-user.decorator';
+import { UseAuthGuard } from './guards/auth.guard';
+import { UseGuestGuard } from './guards/guest.guard';
+import { SessionType } from './interface/session.interface';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly tokenService: TokenService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @Post('/register')
-  register(@Body() body: CreateUserDto): Promise<AuthenticatedResponse> {
-    return this.authService.register(body);
+  @Post('/send_magic_link')
+  @UseGuestGuard()
+  send(@Body() body: SendMagicLinkDto, @Session() session: SessionType) {
+    return this.authService.sendMagicLink(body, session);
   }
 
-  @Post('/login')
-  login(@Body() body: AuthCredentialsDto): Promise<AuthenticatedResponse> {
-    return this.authService.login(body);
+  @Get('/verify')
+  @UseGuestGuard()
+  verify(@Query('token') token: string, @Session() session: SessionType) {
+    return this.authService.verifyMagicToken(token, session);
   }
 
-  @Post('/refresh')
-  async refresh(@Body() body: RefreshTokenDto): Promise<AuthenticatedResponse> {
-    const { user, token } =
-      await this.tokenService.createAccessTokenFromRefreshToken(
-        body.refresh_token,
-      );
-
-    return {
-      user,
-      token,
-      refresh_token: body.refresh_token,
-    };
+  @Post('/signup')
+  @UseGuestGuard()
+  signup(@Body() body: CreateUserDto, @Session() session: SessionType) {
+    return this.authService.createUser(body, session);
   }
 
   @Get('/me')
-  @UseJwtAuthGuard()
+  @UseAuthGuard()
   me(@GetUser() user: User) {
     return user;
   }
 
   @Patch('/update')
-  @UseJwtAuthGuard()
+  @UseAuthGuard()
   update(@GetUser() user: User, @Body() body: UpdateMeDto) {
     return this.authService.updateMe(user.id, body);
   }
 
   @Delete('/logout')
-  async logout(@Body() body: RefreshTokenDto): Promise<void> {
-    await this.tokenService.revokeRefreshToken(body.refresh_token);
+  @UseAuthGuard()
+  async logout(@Session() session: SessionType): Promise<void> {
+    await this.authService.logout(session);
 
     return;
   }
