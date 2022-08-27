@@ -16,6 +16,7 @@ import { PrismaService } from './prisma/prisma.service';
         return {
           session: {
             httpOnly: true,
+            secure: true,
             secret: configService.get('SESSION_SECRET'),
           },
         };

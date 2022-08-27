@@ -73,6 +73,7 @@ P.S. If you did not request this email, you can safely ignore it.
     });
 
     cookies.magicToken = this.encryptionService.encrypt(token);
+    cookies.magicLinkVerified = false;
 
     return { message: 'Email sent successfully !' };
   }
@@ -108,6 +109,7 @@ P.S. If you did not request this email, you can safely ignore it.
     return {
       message: 'Magic link verified, you can now sign up !',
       email: payload.email,
+      awaitingSignup: true,
     };
   }
 
