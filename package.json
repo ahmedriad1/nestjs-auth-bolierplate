@@ -40,6 +40,7 @@
     "@nestjs/mapped-types": "^1.1.0",
     "@nestjs/platform-express": "^9.0.9",
     "@prisma/client": "^4.2.1",
+    "@sendgrid/mail": "^7.7.0",
     "@sentry/node": "^7.11.1",
     "@sentry/tracing": "^7.11.1",
     "@xiifain/nestjs-sentry": "^4.0.2",

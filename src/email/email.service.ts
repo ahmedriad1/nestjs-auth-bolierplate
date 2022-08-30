@@ -1,14 +1,8 @@
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-
-type MailgunMessage = {
-  to: string;
-  from: string;
-  subject: string;
-  text: string;
-  html?: string;
-};
+import Sendgrid from '@sendgrid/mail';
+import { InjectSentry, SentryService } from '@xiifain/nestjs-sentry';
 
 type VerifierResult =
   | { status: true; email: string; domain: string }
@@ -19,39 +13,23 @@ type VerifierResult =
 
 @Injectable()
 export class EmailService {
+  private logger = new Logger(EmailService.name);
+
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-  ) {}
+    @InjectSentry() private readonly sentry: SentryService,
+  ) {
+    Sendgrid.setApiKey(configService.get('SENDGRID_API_KEY'));
+  }
 
-  async sendEmail({ to, from, subject, text, html }: MailgunMessage) {
-    const key = this.configService.get('MAILGUN_KEY');
-    const domain = this.configService.get('MAILGUN_DOMAIN');
-
-    if (!html) html = text;
-
-    const auth = Buffer.from(`api:${key}`).toString('base64');
-
-    const body = new URLSearchParams({
-      to,
-      from,
-      subject,
-      text,
-      html,
-    });
-
+  async sendEmail(data: Sendgrid.MailDataRequired) {
     try {
-      await this.httpService.axiosRef.post(
-        `https://api.mailgun.net/v3/${domain}/messages`,
-        body,
-        {
-          headers: {
-            Authorization: `Basic ${auth}`,
-          },
-        },
-      );
+      const transport = await Sendgrid.send(data);
+      return transport;
     } catch (error: unknown) {
-      console.log(error);
+      this.sentry.instance().captureException(error);
+      this.logger.error('Failed to send email !');
     }
   }
 
