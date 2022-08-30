@@ -14,6 +14,7 @@ import { SessionType } from './interface/session.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { EncryptionService } from './encryption.service';
+import { getMagicLinkTemplate } from '../email/templates/magic_link.template';
 
 @Injectable()
 export class AuthService {
@@ -45,32 +46,18 @@ export class AuthService {
       where: { email: body.email },
     });
     const magicLink = `${url}?token=${token}`;
-    const text = `\n
-Here's your sign-in link for ${hostname}:
-\n
-${magicLink}
-\n
-${
-  user
-    ? `Welcome back ${user.email}!`
-    : `
-Clicking the link above will create a *new* account on ${hostname} with the email ${body.email}. Welcome!
-If you'd instead like to change your email address for an existing account, please send an email to email-change@ar1.dev from the original email address.
-      `.trim()
-}
-\n\n
-Thanks!
-\n
-– Ahmed
-
-P.S. If you did not request this email, you can safely ignore it.
-  `.trim();
 
     await this.emailService.sendEmail({
       to: body.email,
-      from: '"Ahmed" <auth@ar1.dev>',
+      from: 'auth@ar1.dev',
       subject: "Here's your Magic ✨ sign-in link",
-      text,
+      ...getMagicLinkTemplate({
+        magicLink,
+        user,
+        hostname,
+        email: body.email,
+        domainUrl: `https://${hostname}`,
+      }),
     });
 
     cookies.magicToken = this.encryptionService.encrypt(token);
