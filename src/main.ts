@@ -10,15 +10,15 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const app = await NestFactory.create(AppModule);
-
   app.enableCors({
     credentials: true,
     origin:
       process.env.NODE_ENV === 'production'
-        ? 'https://auth.ar1.dev'
+        ? /https?:\/\/(([^/]+\.)?ar1\.dev)$/i
         : 'http://auth.devel:4040',
   });
-  app.use(helmet());
+
+  // app.use(helmet());
   app.use(morgan('tiny'));
 
   app.useGlobalPipes(
