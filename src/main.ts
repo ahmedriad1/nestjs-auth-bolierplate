@@ -1,15 +1,26 @@
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { PrismaService } from './prisma/prisma.service';
-import serverlessExpress from '@vendia/serverless-express';
-import { Handler } from 'aws-lambda';
 
-export async function bootstrap() {
+async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   const app = await NestFactory.create(AppModule);
+
   app.enableCors({
     credentials: true,
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? 'https://auth.ar1.dev'
+        : 'http://auth.devel:4040',
   });
+  app.use(helmet());
+  app.use(morgan('tiny'));
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // will remove unvalidated fields
@@ -19,8 +30,12 @@ export async function bootstrap() {
   const prismaService = app.get(PrismaService);
   await prismaService.enableShutdownHooks(app);
 
-  await app.init();
-  const expressApp = app.getHttpAdapter().getInstance();
+  const configService = app.get(ConfigService);
+  const port = configService.get('PORT') || 3000;
 
-  return serverlessExpress({ app: expressApp }) as Handler;
+  await app.listen(port);
+
+  logger.log(`App started on: ${await app.getUrl()}`);
 }
+
+bootstrap();

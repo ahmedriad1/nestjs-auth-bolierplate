@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { SendMagicLinkDto } from './dto/send-magic-link.dto';
 import { MagicService } from './magic.service';
-import { EmailService } from 'src/email/email.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { EmailService } from '../email/email.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { SessionService } from './session.service';
 import { SessionType } from './interface/session.interface';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -45,26 +45,27 @@ export class AuthService {
       where: { email: body.email },
     });
     const magicLink = `${url}?token=${token}`;
-    const text = `
+    const text = `\n
 Here's your sign-in link for ${hostname}:
-
+\n
 ${magicLink}
-
+\n
 ${
   user
     ? `Welcome back ${user.email}!`
     : `
-Clicking the link above will create a *new* account on ${hostname} with the email ${user.email}. Welcome!
+Clicking the link above will create a *new* account on ${hostname} with the email ${body.email}. Welcome!
 If you'd instead like to change your email address for an existing account, please send an email to email-change@ar1.dev from the original email address.
       `.trim()
 }
-
+\n\n
 Thanks!
-
+\n
 – Ahmed
 
 P.S. If you did not request this email, you can safely ignore it.
   `.trim();
+
     await this.emailService.sendEmail({
       to: body.email,
       from: '"Ahmed" <auth@ar1.dev>',

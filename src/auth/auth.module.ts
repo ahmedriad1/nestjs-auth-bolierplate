@@ -4,9 +4,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtConfigService } from '../config/jwt-config.service';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { MagicService } from './magic.service';
-import { EmailModule } from 'src/email/email.module';
+import { EmailModule } from '../email/email.module';
 import { SessionService } from './session.service';
 import { EncryptionService } from './encryption.service';
 

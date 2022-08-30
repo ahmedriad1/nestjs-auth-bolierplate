@@ -26,7 +26,8 @@ export class MagicService {
 
   async verifyToken(token: string) {
     try {
-      return this.jwtService.verifyAsync<TokenPayload>(token);
+      const payload = await this.jwtService.verifyAsync<TokenPayload>(token);
+      return payload;
     } catch (error: unknown) {
       throw new BadRequestException('Invalid magic link');
     }
