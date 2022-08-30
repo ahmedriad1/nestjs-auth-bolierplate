@@ -5,11 +5,14 @@ import { AppModule } from './app.module';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { PrismaService } from './prisma/prisma.service';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.set('trust proxy', 1);
   app.enableCors({
     credentials: true,
     origin:
@@ -18,7 +21,7 @@ async function bootstrap() {
         : 'http://auth.devel:4040',
   });
 
-  // app.use(helmet());
+  app.use(helmet());
   app.use(morgan('tiny'));
 
   app.useGlobalPipes(
